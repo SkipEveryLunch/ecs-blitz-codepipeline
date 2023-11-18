@@ -6,8 +6,6 @@ import { useQuery, useMutation, invokeWithCtx } from "@blitzjs/rpc"
 import getTasks from "src/tasks/queries/getTasks"
 import createTask from "src/tasks/mutations/createTask"
 import updateTask from "src/tasks/mutations/updateTask"
-import { gSSP } from "src/blitz-server"
-import { Task } from "db"
 
 /*
  * This file is just for a pleasant getting started page for your new app.
@@ -28,9 +26,9 @@ const TaskItem: FC<{ name: string; isDone: boolean; onDone: () => void }> = ({
     </Flex>
   )
 }
-const Home: BlitzPage = ({ tasks }: { tasks: Task[] }) => {
+const Home: BlitzPage = () => {
   const [name, setName] = useState("")
-  const [_, { refetch }] = useQuery(getTasks, {})
+  const [{ tasks }, { refetch }] = useQuery(getTasks, {})
   const [updateTaskMutation] = useMutation(updateTask)
   const [createTaskMutation] = useMutation(createTask)
 
@@ -78,10 +76,5 @@ const Home: BlitzPage = ({ tasks }: { tasks: Task[] }) => {
     </Layout>
   )
 }
-
-export const getServerSideProps = gSSP(async ({ ctx }) => {
-  const tasks = await invokeWithCtx(getTasks, {}, ctx)
-  return { props: tasks }
-})
 
 export default Home

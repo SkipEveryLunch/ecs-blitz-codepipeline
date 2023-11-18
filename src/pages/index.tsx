@@ -1,8 +1,8 @@
 import { FC, useState, useMemo } from "react"
 import Layout from "src/core/layouts/Layout"
 import { BlitzPage } from "@blitzjs/next"
-import { Input, Button, VStack, Text, Flex } from "@chakra-ui/react"
-import { useQuery, useMutation, invokeWithCtx } from "@blitzjs/rpc"
+import { Input, Button, VStack, Text, Flex, Box, Spacer } from "@chakra-ui/react"
+import { useQuery, useMutation } from "@blitzjs/rpc"
 import getTasks from "src/tasks/queries/getTasks"
 import createTask from "src/tasks/mutations/createTask"
 import updateTask from "src/tasks/mutations/updateTask"
@@ -18,8 +18,11 @@ const TaskItem: FC<{ name: string; isDone: boolean; onDone: () => void }> = ({
   onDone,
 }) => {
   return (
-    <Flex>
-      <Text textDecoration={isDone ? "line-through" : "none"}>{name}</Text>
+    <Flex border="1px" borderColor="gray.200" p={3} rounded="md" justify="space-betweem">
+      <Box>
+        <Text textDecoration={isDone ? "line-through" : "none"}>{name}</Text>
+      </Box>
+      <Spacer />
       <Button p={0} size="sm" colorScheme="gray" onClick={onDone}>
         ×
       </Button>
@@ -60,7 +63,7 @@ const Home: BlitzPage = () => {
           />
           <Button onClick={addTask}>＋</Button>
         </Flex>
-        <VStack spacing={4} align="stretch">
+        <VStack spacing={4} align="stretch" w="50%">
           {tasks.map((task) => {
             return (
               <TaskItem

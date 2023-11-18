@@ -1,79 +1,75 @@
-import { FC, useState } from "react"
+import { FC, useState, useMemo } from "react"
 import Layout from "src/core/layouts/Layout"
 import { BlitzPage } from "@blitzjs/next"
 import { Input, Button, VStack, Text, Flex } from "@chakra-ui/react"
-import { v4 as uuidv4 } from "uuid"
+import { useQuery, useMutation, invokeWithCtx } from "@blitzjs/rpc"
+import getTasks from "src/tasks/queries/getTasks"
+import createTask from "src/tasks/mutations/createTask"
+import updateTask from "src/tasks/mutations/updateTask"
+import { gSSP } from "src/blitz-server"
+import { Task } from "db"
 
 /*
  * This file is just for a pleasant getting started page for your new app.
  * You can delete everything in here and start from scratch if you like.
  */
-type Todo = {
-  code: string
-  title: string
-  isDone: boolean
-}
 
-const TodoItem: FC<{ title: string; isDone: boolean; onDone: () => void }> = ({
-  title,
+const TaskItem: FC<{ name: string; isDone: boolean; onDone: () => void }> = ({
+  name,
   isDone,
   onDone,
 }) => {
   return (
     <Flex>
-      <Text textDecoration={isDone ? "line-through" : "none"}>{title}</Text>
+      <Text textDecoration={isDone ? "line-through" : "none"}>{name}</Text>
       <Button p={0} size="sm" colorScheme="gray" onClick={onDone}>
         ×
       </Button>
     </Flex>
   )
 }
-const Home: BlitzPage = () => {
-  const [title, setTitle] = useState("")
-  const [todos, setTodos] = useState<Todo[]>([])
-  const addTodo = () => {
-    if (title.length === 0) return
-    const newTodo = {
-      code: uuidv4(),
-      title,
-      isDone: false,
-    }
-    setTitle("")
-    setTodos([newTodo, ...todos])
+const Home: BlitzPage = ({ tasks }: { tasks: Task[] }) => {
+  const [name, setName] = useState("")
+  const [_, { refetch }] = useQuery(getTasks, {})
+  const [updateTaskMutation] = useMutation(updateTask)
+  const [createTaskMutation] = useMutation(createTask)
+
+  const availableIds = useMemo(() => {
+    return tasks.map((task) => task.id)
+  }, [tasks])
+
+  const addTask = async () => {
+    if (name.length === 0) return
+    await createTaskMutation({ name })
+    setName("")
+    await refetch()
   }
-  const doneTodo = (code: string) => {
-    const newTodos = todos.map((todo) => {
-      if (todo.code === code) {
-        return {
-          code: todo.code,
-          title: todo.title,
-          isDone: !todo.isDone,
-        }
-      }
-      return todo
-    })
-    setTodos(newTodos)
+  const doneTask = async (id: number, isDone: boolean) => {
+    if (!availableIds.includes(id)) return
+    await updateTaskMutation({ id, isDone })
+    setName("")
+    await refetch()
   }
   return (
     <Layout title="Home">
       <VStack p={4}>
         <Flex mb={4}>
           <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Todoを追加..."
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Taskを追加..."
             mr={2}
           />
-          <Button onClick={addTodo}>＋</Button>
+          <Button onClick={addTask}>＋</Button>
         </Flex>
         <VStack spacing={4} align="stretch">
-          {todos.map((todo) => {
+          {tasks.map((task) => {
             return (
-              <TodoItem
-                key={todo.code}
-                title={todo.title}
-                isDone={todo.isDone}
-                onDone={() => doneTodo(todo.code)}
+              <TaskItem
+                key={task.id}
+                name={task.name}
+                isDone={task.isDone}
+                onDone={async () => await doneTask(task.id, !task.isDone)}
               />
             )
           })}
@@ -82,5 +78,10 @@ const Home: BlitzPage = () => {
     </Layout>
   )
 }
+
+export const getServerSideProps = gSSP(async ({ ctx }) => {
+  const tasks = await invokeWithCtx(getTasks, {}, ctx)
+  return { props: tasks }
+})
 
 export default Home

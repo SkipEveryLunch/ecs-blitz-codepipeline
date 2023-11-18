@@ -1,6 +1,6 @@
 import { ErrorFallbackProps, ErrorComponent, ErrorBoundary, AppProps } from "@blitzjs/next"
 import { AuthenticationError, AuthorizationError } from "blitz"
-import React from "react"
+import React, { Suspense } from "react"
 import { withBlitz } from "src/blitz-client"
 import "src/styles/globals.css"
 import { ChakraProvider } from "@chakra-ui/react"
@@ -29,9 +29,11 @@ function MyApp({ Component, pageProps }: AppProps) {
   const getLayout = Component.getLayout || ((page) => page)
   return (
     <ChakraProvider>
-      <ErrorBoundary FallbackComponent={RootErrorFallback}>
-        {getLayout(<Component {...pageProps} />)}
-      </ErrorBoundary>
+      <Suspense fallback="Loading...">
+        <ErrorBoundary FallbackComponent={RootErrorFallback}>
+          {getLayout(<Component {...pageProps} />)}
+        </ErrorBoundary>
+      </Suspense>
     </ChakraProvider>
   )
 }

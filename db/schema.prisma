@@ -3,7 +3,7 @@
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+  url      = "file:db/db.sqlite"
 }
 
 generator client {
@@ -55,6 +55,12 @@ model Token {
   userId Int
 
   @@unique([hashedToken, type])
+}
+
+model Task {
+  id     Int     @id @default(autoincrement())
+  name   String
+  isDone Boolean @default(false)
 }
 
 // NOTE: It's highly recommended to use an enum for the token type

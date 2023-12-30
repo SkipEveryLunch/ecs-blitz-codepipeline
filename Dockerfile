@@ -13,4 +13,5 @@ RUN npx blitz prisma generate
 RUN npx blitz codegen
 RUN npx blitz build
 
-CMD [ "npm", "run", "start" ]
+RUN chmod +x start.sh
+CMD ["./start.sh"]
